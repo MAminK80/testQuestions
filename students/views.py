@@ -40,10 +40,13 @@ class StudentView(View):
         this_question = ThisQuestion(request)
         form = AnswerForm()
         for question in paginated_questions:
-            this_question.next_question(question.question_text)
-            options = Option.objects.filter(question__question_text=question.question_text)
+            this_question.next_question(str(question.id))
+            options = Option.objects.filter(question=Question.objects.get(question_text=question.question_text))
+            print(Question.objects.get(question_text=question.question_text).question_text)
+            print(question.id)
             form_maker = FormMaker(options)
-            form.fields['field'].label = this_question.current_question()
+            print(this_question.current_question())
+            form.fields['field'].label = Question.objects.get(question_text=question.question_text).question_text
             form.fields['field'].choices = form_maker.options_maker()
 
         return render(request, 'students/students_view.html', {'form': form, 'page': num_page})
@@ -55,7 +58,7 @@ class StudentView(View):
         this_question = ThisQuestion(request)
         if form.is_valid():
             choice = form.cleaned_data.get('field')
-            question = Question.objects.get(question_text=this_question.current_question())
+            question = Question.objects.get(question_text=RandomQuestions.objects.get(id=int(this_question.current_question())).question_text)
             choice_ob = Option.objects.filter(question=question)
             selected_answer = choice_ob[int(choice) - 1]
             answer.add(question.question_text, selected_answer, selected_answer.score)
